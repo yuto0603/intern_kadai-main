@@ -26,9 +26,7 @@
         <p class="item-info-text"><?php echo htmlspecialchars($item_label); ?> (モニター) - <?php echo htmlspecialchars($loaned_user_name); ?></p>
 
         <div class="form-section">
-            <form action="<?php echo Uri::base() . 'box/return/' . htmlspecialchars($item_id); ?>" method="post">
-                <input type="hidden" name="box_id" value="<?php echo htmlspecialchars($item_id); ?>">
-                
+            <form action="#" method="post">
                 <button type="submit" class="action-button return">返却する</button>
             </form>
             </div>

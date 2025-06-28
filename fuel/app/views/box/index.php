@@ -31,21 +31,21 @@
             <div class="card-grid">
                 <?php foreach ($boxes as $box): ?>
                     <?php
-                        // Controllerから渡される box_status_data を使用して、各ボックスの状態を決定
-                        // $box には box_id と label が含まれる
-                        // $box_status_data には box_id をキーとして status, user_name が含まれる
-                        $status_info = isset($box_status_data[$box['box_id']]) ? $box_status_data[$box['box_id']] : null;
-                        
-                        $is_loaned = ($status_info && $status_info['status'] == '貸出中');
+                        // ★★★ ここから仮のロジック：状態によって見た目を切り替える ★★★
+                        // box_id が 1 の場合のみ「貸出中」と表示し、それ以外は「貸出可能」
+                        // 'test' さんが借りているという仮定
+                        $is_loaned = ($box['box_id'] == 1);
                         $card_class = $is_loaned ? 'loaned' : 'available';
                         $status_text = $is_loaned ? '貸出中' : '貸出可能';
-                        $loaned_by_name = $is_loaned ? '(' . htmlspecialchars($status_info['user_name']) . ')' : '';
+                        $loaned_by_name = $is_loaned ? '(test)' : '';
                         
+                        // 各カードがクリックされたときに、貸出/返却ページへ遷移するリンク (機能は後で実装)
                         $card_link_url = $is_loaned ? 'return/' . $box['box_id'] : 'loan/' . $box['box_id'];
                     ?>
                     <a href="<?php echo Uri::base() . 'box/' . $card_link_url; ?>" class="item-card <?php echo $card_class; ?>">
                         <div class="item-name"><?php echo htmlspecialchars($box['label']); ?></div>
-                        <div class="item-type">モニター</div> <div class="item-status"><?php echo $status_text; ?></div>
+                        <div class="item-type">モニター</div>
+                        <div class="item-status"><?php echo $status_text; ?></div>
                         <?php if ($is_loaned): ?>
                             <div class="loaned-by"><?php echo htmlspecialchars($loaned_by_name); ?></div>
                         <?php endif; ?>
@@ -54,7 +54,5 @@
             </div>
         <?php endif; ?>
 
-    </div>
-
-</body>
+    </div> </body>
 </html>

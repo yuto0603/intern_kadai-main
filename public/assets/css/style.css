@@ -77,6 +77,8 @@ body {
     text-align: center;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08); /* 薄い影 */
     transition: transform 0.2s ease-in-out;
+    text-decoration: none; /* リンクのデフォルト下線を消す */
+    color: inherit; /* リンクの色を継承 */
 }
 
 .item-card:hover {
@@ -131,17 +133,7 @@ body {
     background-color: #2980b9;
 }
 
-/* 貸出可能 (デフォルト) */
-.item-card.available {
-    background-color: #f2fff2; /* 薄い緑色の背景 */
-    border: 1px solid #c8e6c9; /* 緑色の枠線 */
-}
-.item-card.available .item-name,
-.item-card.available .item-status {
-    color: #2e7d32; /* 濃い緑色の文字 */
-}
-
-/* 貸出中 (赤色) */
+/* Item Card Variations (貸出中) */
 .item-card.loaned {
     background-color: #fff2f2; /* 薄い赤色の背景 */
     border: 1px solid #e6c8c8; /* 赤色の枠線 */
@@ -156,7 +148,6 @@ body {
     color: #777;
     margin-top: 5px;
 }
-
 
 /* Form & Button Styles for Loan/Return Pages */
 .form-section {
@@ -232,17 +223,17 @@ body {
 }
 
 .registration-form .form-label {
-    margin-bottom: 5px; /* ラベルと入力フィールドの間隔を調整 */
+    margin-bottom: 5px;
     font-weight: 500;
 }
 
 .registration-form .form-input {
-    margin-bottom: 15px; /* 各入力フィールドの下の余白 */
+    margin-bottom: 15px;
 }
 
 /* Register Button (青色) */
 .action-button.register {
-    background-color: #007bff; /* 青色ボタン */
+    background-color: #007bff;
 }
 .action-button.register:hover {
     background-color: #0056b3;
@@ -259,7 +250,7 @@ body {
     margin-top: 30px;
     margin-bottom: 20px;
     padding-left: 10px;
-    border-left: 4px solid #007bff; /* 青い縦線 */
+    border-left: 4px solid #007bff;
 }
 
 .edit-delete-card {
@@ -267,9 +258,9 @@ body {
     border: 1px solid #ddd;
     border-radius: 8px;
     padding: 15px;
-    margin-bottom: 15px; /* カード間のスペース */
+    margin-bottom: 15px;
     display: flex;
-    align-items: center; /* 垂直方向中央寄せ */
+    align-items: center;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
@@ -277,23 +268,23 @@ body {
     font-size: 1.1em;
     font-weight: bold;
     color: #333;
-    flex-basis: 80px; /* B-1などのID表示幅を固定 */
+    flex-basis: 80px;
     min-width: 80px;
 }
 
 .edit-delete-card .form-input {
-    flex-grow: 1; /* 入力フィールドが残りのスペースを占める */
-    margin-bottom: 0; /* カード内の入力フィールドは下マージンなし */
-    margin-right: 15px; /* 入力フィールドとボタンの間隔 */
+    flex-grow: 1;
+    margin-bottom: 0;
+    margin-right: 15px;
 }
 
 /* Edit Button (青色) */
 .action-button.edit {
-    background-color: #17a2b8; /* 水色ボタン */
+    background-color: #17a2b8;
     font-size: 0.9em;
     padding: 8px 15px;
-    width: auto; /* 幅を自動調整 */
-    margin-right: 10px; /* 削除ボタンとの間隔 */
+    width: auto;
+    margin-right: 10px;
 }
 .action-button.edit:hover {
     background-color: #138496;
@@ -301,10 +292,10 @@ body {
 
 /* Delete Button (黄色) */
 .action-button.delete {
-    background-color: #ffc107; /* 黄色ボタン */
+    background-color: #ffc107;
     font-size: 0.9em;
     padding: 8px 15px;
-    width: auto; /* 幅を自動調整 */
+    width: auto;
 }
 .action-button.delete:hover {
     background-color: #e0a800;

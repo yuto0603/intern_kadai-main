@@ -25,16 +25,16 @@
 
         <div class="registration-form">
             <h3>新しい備品の追加</h3>
-            <form action="<?php echo Uri::base(); ?>box/add" method="post">
-                <label for="newLabel" class="form-label">新しい備品ラベル (例: B-16):</label>
-                <input type="text" id="newLabel" name="new_label" class="form-input" placeholder="例: B-16" required>
+            <form action="#" method="post">
+                <label for="newId" class="form-label">新しい備品ID (例: B-16):</label>
+                <input type="text" id="newId" name="new_label" class="form-input" placeholder="例: B-16">
                 
-                <label for="newItemType" class="form-label">備品名 (例: モニター):</label>
-                <input type="text" id="newItemType" name="item_type" class="form-input" placeholder="例: モニター" value="モニター" required> 
+                <label for="newName" class="form-label">備品名 (例: モニター):</label>
+                <input type="text" id="newName" name="item_type" class="form-input" placeholder="例: モニター" value="モニター"> 
                 
                 <button type="submit" class="action-button register">備品を登録</button>
             </form>
-        </div>
+            </div>
 
         <div class="existing-items">
             <h2>既存備品の編集・削除</h2>
@@ -48,14 +48,12 @@
                         <div class="edit-delete-card">
                             <div class="item-label-display"><?php echo htmlspecialchars($item['label']); ?>:</div>
                             
-                            <form action="<?php echo Uri::base() . 'box/edit/' . htmlspecialchars($item['box_id']); ?>" method="post" style="display: flex; flex-grow: 1; align-items: center;">
-                                <input type="hidden" name="box_id" value="<?php echo htmlspecialchars($item['box_id']); ?>">
+                            <form action="#" method="post" style="display: flex; flex-grow: 1; align-items: center;">
                                 <input type="text" name="edited_label" class="form-input" value="<?php echo htmlspecialchars($item['label']); ?>">
                                 <button type="submit" class="action-button edit">編集</button>
                             </form>
                             
-                            <form action="<?php echo Uri::base() . 'box/delete/' . htmlspecialchars($item['box_id']); ?>" method="post" onsubmit="return confirm('本当にこの備品を削除しますか？');">
-                                <input type="hidden" name="box_id" value="<?php echo htmlspecialchars($item['box_id']); ?>">
+                            <form action="#" method="post" onsubmit="return confirm('本当にこの備品を削除しますか？');">
                                 <button type="submit" class="action-button delete">削除</button>
                             </form>
                         </div>

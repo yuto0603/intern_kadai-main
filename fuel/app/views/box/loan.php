@@ -26,11 +26,9 @@
         <p class="item-info-text"><?php echo htmlspecialchars($item_label); ?> (モニター)</p>
 
         <div class="form-section">
-            <form action="<?php echo Uri::base() . 'box/loan/' . htmlspecialchars($item_id); ?>" method="post">
-                <input type="hidden" name="box_id" value="<?php echo htmlspecialchars($item_id); ?>">
-
+            <form action="#" method="post">
                 <label for="userName" class="form-label">あなたの名前:</label>
-                <input type="text" id="userName" name="user_name" class="form-input" placeholder="名前を入力してください" required>
+                <input type="text" id="userName" name="user_name" class="form-input" placeholder="名前を入力してください">
                 
                 <button type="submit" class="action-button loan">貸し出す</button>
             </form>
