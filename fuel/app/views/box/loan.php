@@ -23,14 +23,18 @@
 
         <h2 class="section-title">備品の貸出</h2>
 
-        <p class="item-info-text"><?php echo $item_label; ?> (モニター)</p>
+        <p class="item-info-text"><?php echo htmlspecialchars($item_label); ?> (モニター)</p>
 
         <div class="form-section">
-            <label for="userName" class="form-label">あなたの名前:</label>
-            <input type="text" id="userName" class="form-input" placeholder="名前を入力してください">
-            
-            <button class="action-button loan">貸し出す</button>
-        </div>
+            <form action="<?php echo Uri::base() . 'box/loan/' . htmlspecialchars($item_id); ?>" method="post">
+                <input type="hidden" name="box_id" value="<?php echo htmlspecialchars($item_id); ?>">
+
+                <label for="userName" class="form-label">あなたの名前:</label>
+                <input type="text" id="userName" name="user_name" class="form-input" placeholder="名前を入力してください" required>
+                
+                <button type="submit" class="action-button loan">貸し出す</button>
+            </form>
+            </div>
 
     </div>
 

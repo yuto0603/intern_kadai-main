@@ -19,7 +19,7 @@
 
         <div class="tab-nav">
             <a href="<?php echo Uri::base(); ?>box" class="tab-nav-item active">備品一覧</a>
-            <a href="<?php echo Uri::base(); ?>box/manage" class="tab-nav-item">備品管理</a> 
+            <a href="<?php echo Uri::base(); ?>box/manage" class="tab-nav-item">備品管理</a>
         </div>
 
         <h2 class="section-title">現在の備品状況</h2>
@@ -31,26 +31,30 @@
             <div class="card-grid">
                 <?php foreach ($boxes as $box): ?>
                     <?php
-    
-                        $is_loaned = ($box['box_id'] == 1);
+                        // Controllerから渡される box_status_data を使用して、各ボックスの状態を決定
+                        // $box には box_id と label が含まれる
+                        // $box_status_data には box_id をキーとして status, user_name が含まれる
+                        $status_info = isset($box_status_data[$box['box_id']]) ? $box_status_data[$box['box_id']] : null;
+                        
+                        $is_loaned = ($status_info && $status_info['status'] == '貸出中');
                         $card_class = $is_loaned ? 'loaned' : 'available';
                         $status_text = $is_loaned ? '貸出中' : '貸出可能';
-                        $loaned_by_name = $is_loaned ? '(test)' : '';
-                        
+                        $loaned_by_name = $is_loaned ? '(' . htmlspecialchars($status_info['user_name']) . ')' : '';
                         
                         $card_link_url = $is_loaned ? 'return/' . $box['box_id'] : 'loan/' . $box['box_id'];
                     ?>
                     <a href="<?php echo Uri::base() . 'box/' . $card_link_url; ?>" class="item-card <?php echo $card_class; ?>">
-                        <div class="item-name"><?php echo $box['label']; ?></div>
-                        <div class="item-type">モニター</div>
-                        <div class="item-status"><?php echo $status_text; ?></div>
+                        <div class="item-name"><?php echo htmlspecialchars($box['label']); ?></div>
+                        <div class="item-type">モニター</div> <div class="item-status"><?php echo $status_text; ?></div>
                         <?php if ($is_loaned): ?>
-                            <div class="loaned-by"><?php echo $loaned_by_name; ?></div>
+                            <div class="loaned-by"><?php echo htmlspecialchars($loaned_by_name); ?></div>
                         <?php endif; ?>
                     </a>
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
 
-    </div> </body>
+    </div>
+
+</body>
 </html>

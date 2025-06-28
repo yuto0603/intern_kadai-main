@@ -23,11 +23,15 @@
 
         <h2 class="section-title">備品の返却</h2>
 
-        <p class="item-info-text"><?php echo $item_label; ?> (モニター) - <?php echo $loaned_user_name; ?></p>
+        <p class="item-info-text"><?php echo htmlspecialchars($item_label); ?> (モニター) - <?php echo htmlspecialchars($loaned_user_name); ?></p>
 
         <div class="form-section">
-            <button class="action-button return">返却する</button>
-        </div>
+            <form action="<?php echo Uri::base() . 'box/return/' . htmlspecialchars($item_id); ?>" method="post">
+                <input type="hidden" name="box_id" value="<?php echo htmlspecialchars($item_id); ?>">
+                
+                <button type="submit" class="action-button return">返却する</button>
+            </form>
+            </div>
 
     </div>
 
