@@ -61,7 +61,15 @@ return array(
 	 */
 	// 'ob_callback'  => null,
 
-	// 'errors'  => array(
+	'errors'  => array(
+
+        'render' => true,
+        'throttle' => 10,
+        'max_notices' => 10,
+        'max_warnings' => 10,
+        'throw_on_warning' => true, // WarningもExceptionとしてスローする
+        'error_level' => E_ALL,     // 全てのエラーを表示
+        'display_errors' => true,   // エラーメッセージをブラウザに表示
 		// Which errors should we show, but continue execution? You can add the following:
 		// E_NOTICE, E_WARNING, E_DEPRECATED, E_STRICT to mimic PHP's default behaviour
 		// (which is to continue on non-fatal errors). We consider this bad practice.
@@ -72,7 +80,7 @@ return array(
 		// 'notices'      => true,
 		// Render previous contents or show it as HTML?
 		// 'render_prior' => false,
-	// ),
+	),
 
 	/**
 	 * Localization & internationalization settings

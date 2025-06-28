@@ -2,53 +2,33 @@
 
 class Controller_Box extends Controller
 {
-
-    /**
-     * index アクション (備品一覧表示)
-     */
-    public function action_index()
+    public function action_index() //一覧（メインページ）
     {
+
         $boxes = Model_Box::get_all_boxes();
-        
-        // 仮のステータスデータをすべてのボックスに対して生成
         $box_status_data = array();
+
         foreach ($boxes as $box) {
-            $box_id = $box['box_id']; // 現在のboxのIDを取得
-            
-            // B-1 (box_id が 1) の場合のみ貸出中と仮定
+            $box_id = $box['box_id'];
             $is_loaned = ($box_id == 1);
             
-            if ($is_loaned) {
-                $box_status_data[$box_id] = array(
-                    'status' => '貸出中',
-                    'user_name' => 'test',
-                    'current_user_id' => 1,
-                );
-            } else {
-                // B-1 以外のボックスには「貸出可能」のデータを設定
-                $box_status_data[$box_id] = array(
-                    'status' => '貸出可能',
-                    'user_name' => null,
-                    'current_user_id' => null,
-                );
-            }
+            $box_status_data[$box_id] = array(
+                'status' => $is_loaned ? '貸出中' : '貸出可能',
+                'user_name' => $is_loaned ? 'test' : null,
+                'current_user_id' => $is_loaned ? 1 : null,
+            );
         }
 
         $view = View::forge('box/index', array(
             'boxes' => $boxes,
-            'box_status_data' => $box_status_data, // Viewにステータスデータを渡す
+            'box_status_data' => $box_status_data,
             'title' => '備品一覧',
         ));
         
         return Response::forge($view);
     }
 
-    /**
-     * 貸出ページを表示するアクション (GET)
-     * URL: /box/loan/{box_id}
-     * @param int $id ボックスのID
-     */
-    public function action_loan($id = null)
+    public function action_loan($id = null) //貸出
     {
         if ($id === null)
         {
@@ -61,7 +41,6 @@ class Controller_Box extends Controller
             'label'  => 'B-' . $id,
             'type'   => 'モニター',
         );
-        // 実際のアプリではModel_Box::get_box_by_id($id); のように取得
 
         $view = View::forge('box/loan', array(
             'title'      => '備品の貸出',
@@ -73,25 +52,20 @@ class Controller_Box extends Controller
         return \Response::forge($view);
     }
 
-    /**
-     * 返却ページを表示するアクション (GET)
-     * URL: /box/return/{box_id}
-     * @param int $id ボックスのID
-     */
-    public function action_return($id = null)
+    
+    public function action_return($id = null)//返却
     {
         if ($id === null)
         {
             return $this->action_404();
         }
 
-        // 仮のボックスデータとユーザー名
-        $box_data = array(
+        $box_data = array( //仮
             'box_id' => $id,
             'label'  => 'B-' . $id,
             'type'   => 'モニター',
         );
-        $loaned_user_name = 'test'; // 仮の借りているユーザー名
+        $loaned_user_name = 'test'; //仮
 
         $view = View::forge('box/return', array(
             'title'            => '備品の返却',
@@ -104,24 +78,18 @@ class Controller_Box extends Controller
         return \Response::forge($view);
     }
 
-    /**
-     * 備品管理ページを表示するアクション (GET)
-     * URL: /box/manage
-     */
-    public function action_manage()
+    public function action_manage()//備品管理
     {
         $boxes = Model_Box::get_all_boxes();
         
         $items_by_type = array();
 
-        // 備品の種類を仮で判定 (将来的にDBカラムから取得)
-        foreach ($boxes as $box) {
+        foreach ($boxes as $box) { //仮
             $item_id = $box['box_id'];
             $item_label = $box['label'];
             
             $item_type = 'モニター';
-            if ($item_id >= 16 && $item_id <= 20) { // 例としてB-16からB-20をType-Cコードとする
-                $item_type = 'Type-Cコード';
+            if ($item_id >= 16 && $item_id <= 20) { // 例
             } elseif ($item_id > 20) {
                 $item_type = 'その他備品'; 
             }

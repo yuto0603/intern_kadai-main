@@ -26,7 +26,7 @@
         <div class="registration-form">
             <h3>新しい備品の追加</h3>
             <form action="#" method="post">
-                <label for="newId" class="form-label">新しい備品ID (例: B-16):</label>
+                <label for="newId" class="form-label">新しい備品ラベル (例: B-16):</label>
                 <input type="text" id="newId" name="new_label" class="form-input" placeholder="例: B-16">
                 
                 <label for="newName" class="form-label">備品名 (例: モニター):</label>

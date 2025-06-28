@@ -31,9 +31,7 @@
             <div class="card-grid">
                 <?php foreach ($boxes as $box): ?>
                     <?php
-                        // ★★★ ここから仮のロジック：状態によって見た目を切り替える ★★★
-                        // box_id が 1 の場合のみ「貸出中」と表示し、それ以外は「貸出可能」
-                        // 'test' さんが借りているという仮定
+                        //仮で貸出中設定
                         $is_loaned = ($box['box_id'] == 1);
                         $card_class = $is_loaned ? 'loaned' : 'available';
                         $status_text = $is_loaned ? '貸出中' : '貸出可能';
