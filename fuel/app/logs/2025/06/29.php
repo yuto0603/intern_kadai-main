@@ -102,3 +102,4 @@ WARNING - 2025-06-29 12:50:20 --> Fuel\Core\Fuel::init - The configured locale e
 ERROR - 2025-06-29 12:50:20 --> Fatal Error - Method Fuel\Core\View::__toString() must not throw an exception, caught ParseError: syntax error, unexpected end of file in /var/www/html/my_fuel_project/fuel/core/classes/response.php on line 0
 WARNING - 2025-06-29 12:52:43 --> Fuel\Core\Fuel::init - The configured locale en_US is not installed on your system.
 WARNING - 2025-06-29 12:52:49 --> Fuel\Core\Fuel::init - The configured locale en_US is not installed on your system.
+WARNING - 2025-06-29 13:30:34 --> Fuel\Core\Fuel::init - The configured locale en_US is not installed on your system.
