@@ -6,5 +6,14 @@
  */
 
 return array(
-
-);
+     'default' => array(
+        'type'        => 'mysqli', 
+            'hostname'   => 'db', 
+            'port'       => '3306',
+            'database'   => 'equipment_db', 
+            'username'   => 'root',
+            'password'   => 'root',
+            'persistent' => false,
+            'compress'   => false,
+        ),
+    );

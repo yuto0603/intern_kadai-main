@@ -2,33 +2,25 @@
 
 class Controller_Box extends Controller
 {
-    public function action_index() //一覧（メインページ）
+   
+    public function action_index()
     {
-
         $boxes = Model_Box::get_all_boxes();
-        $box_status_data = array();
-
-        foreach ($boxes as $box) {
-            $box_id = $box['box_id'];
-            $is_loaned = ($box_id == 1);
-            
-            $box_status_data[$box_id] = array(
-                'status' => $is_loaned ? '貸出中' : '貸出可能',
-                'user_name' => $is_loaned ? 'test' : null,
-                'current_user_id' => $is_loaned ? 1 : null,
-            );
-        }
 
         $view = View::forge('box/index', array(
             'boxes' => $boxes,
-            'box_status_data' => $box_status_data,
             'title' => '備品一覧',
         ));
         
         return Response::forge($view);
     }
 
-    public function action_loan($id = null) //貸出
+    /**
+     * 貸出ページを表示するアクション (GET)
+     * URL: /box/loan/{box_id}
+     * @param int $id ボックスのID
+     */
+    public function action_loan($id = null)
     {
         if ($id === null)
         {
@@ -52,20 +44,25 @@ class Controller_Box extends Controller
         return \Response::forge($view);
     }
 
-    
-    public function action_return($id = null)//返却
+    /**
+     * 返却ページを表示するアクション (GET)
+     * URL: /box/return/{box_id}
+     * @param int $id ボックスのID
+     */
+    public function action_return($id = null)
     {
         if ($id === null)
         {
             return $this->action_404();
         }
 
-        $box_data = array( //仮
+        // 仮のボックスデータとユーザー名
+        $box_data = array(
             'box_id' => $id,
             'label'  => 'B-' . $id,
             'type'   => 'モニター',
         );
-        $loaned_user_name = 'test'; //仮
+        $loaned_user_name = 'test'; // 仮の借りているユーザー名
 
         $view = View::forge('box/return', array(
             'title'            => '備品の返却',
@@ -78,18 +75,24 @@ class Controller_Box extends Controller
         return \Response::forge($view);
     }
 
-    public function action_manage()//備品管理
+    /**
+     * 備品管理ページを表示するアクション (GET)
+     * URL: /box/manage
+     */
+    public function action_manage()
     {
         $boxes = Model_Box::get_all_boxes();
         
         $items_by_type = array();
 
-        foreach ($boxes as $box) { //仮
+        // 備品の種類を仮で判定
+        foreach ($boxes as $box) {
             $item_id = $box['box_id'];
             $item_label = $box['label'];
             
             $item_type = 'モニター';
-            if ($item_id >= 16 && $item_id <= 20) { // 例
+            if ($item_id >= 16 && $item_id <= 20) { // 例としてB-16からB-20をType-Cコードとする
+                $item_type = 'Type-Cコード';
             } elseif ($item_id > 20) {
                 $item_type = 'その他備品'; 
             }
@@ -113,6 +116,10 @@ class Controller_Box extends Controller
     }
 
 
+    /**
+     * 404 Not Found のアクション
+     * ... (変更なし) ...
+     */
     public function action_404()
     {
         return \Response::forge(\View::forge('404'), 404);

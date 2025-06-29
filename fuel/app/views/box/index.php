@@ -31,22 +31,19 @@
             <div class="card-grid">
                 <?php foreach ($boxes as $box): ?>
                     <?php
-                        //仮で貸出中設定
-                        $is_loaned = ($box['box_id'] == 1);
-                        $card_class = $is_loaned ? 'loaned' : 'available';
-                        $status_text = $is_loaned ? '貸出中' : '貸出可能';
-                        $loaned_by_name = $is_loaned ? '(test)' : '';
+                        // 常に貸出可能（緑色）で表示する仮のロジック
+                        $card_class = 'available'; 
+                        $status_text = '貸出可能';
+                        // 借りている人の名前は表示しない
                         
-                        // 各カードがクリックされたときに、貸出/返却ページへ遷移するリンク (機能は後で実装)
-                        $card_link_url = $is_loaned ? 'return/' . $box['box_id'] : 'loan/' . $box['box_id'];
+                        // 各カードは、常に貸出ページへのリンクとする
+                        $card_link_url = 'loan/' . $box['box_id'];
                     ?>
                     <a href="<?php echo Uri::base() . 'box/' . $card_link_url; ?>" class="item-card <?php echo $card_class; ?>">
                         <div class="item-name"><?php echo htmlspecialchars($box['label']); ?></div>
                         <div class="item-type">モニター</div>
                         <div class="item-status"><?php echo $status_text; ?></div>
-                        <?php if ($is_loaned): ?>
-                            <div class="loaned-by"><?php echo htmlspecialchars($loaned_by_name); ?></div>
-                        <?php endif; ?>
+                        <?php // 借りている人の名前の表示ロジックは削除済み ?>
                     </a>
                 <?php endforeach; ?>
             </div>
