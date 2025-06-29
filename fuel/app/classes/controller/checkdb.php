@@ -9,5 +9,8 @@ class Controller_Checkdb extends \Controller
             ->current();
         var_dump($result);
         exit;
+
+
+        //git hub check
     }
 }
