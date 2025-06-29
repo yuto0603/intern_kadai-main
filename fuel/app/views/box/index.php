@@ -8,7 +8,7 @@
     <?php echo Asset::css('style.css'); ?>
 </head>
 <body>
-
+<!--git hub check push-->
     <div class="lang-switcher">
         <a href="#" class="lang-btn active">日本語</a>
         <a href="#" class="lang-btn">English</a>
