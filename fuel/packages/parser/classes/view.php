@@ -52,6 +52,7 @@ class View extends \Fuel\Core\View
 	 */
 	public static function forge($file = null, $data = null, $auto_encode = null)
 	{
+		
 		$class = null;
 
 		$extension = 'php';

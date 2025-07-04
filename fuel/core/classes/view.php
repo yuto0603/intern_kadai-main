@@ -603,17 +603,17 @@ class View
 	{
 		// reactivate the correct request
 		if (class_exists('Request', false))
-		{
+        {
 			$current_request = \Request::active();
 			\Request::active($this->active_request);
-		}
+        }
 
 		// store the current language, and set the correct render language
 		if ($this->active_language)
-		{
+        {
 			$current_language = \Config::get('language', 'en');
 			\Config::set('language', $this->active_language);
-		}
+        }
 
 		// override the view filename if needed
 		if ($file !== null)
@@ -623,7 +623,7 @@ class View
 
 		// and make sure we have one
 		if (empty($this->file_name))
-		{
+        {
 			throw new \FuelException('You must set the file to use within your view before rendering');
 		}
 
@@ -635,9 +635,9 @@ class View
 
 		// and the active request class
 		if (isset($current_request))
-		{
+        {
 			\Request::active($current_request);
-		}
+        }
 
 		return $return;
 	}
