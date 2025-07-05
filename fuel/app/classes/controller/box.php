@@ -13,6 +13,8 @@ class Controller_Box extends Controller
         // セキュリティ要件を満たすため、CSRFトークンを生成しセッションに保存します。
         // これにより、フォーム送信時にトークンを検証できるようになります。
         \Security::fetch_token();
+        \View::set_global('global_data', array());
+        \View::set_global('auto_encode', true);
     }
    
     public function action_index()
@@ -35,6 +37,7 @@ class Controller_Box extends Controller
             'title' => '備品一覧',
             'flash_message_success' => \Session::get_flash('success'), // 成功メッセージを取得
             'flash_message_error' => \Session::get_flash('error'),     // エラーメッセージを取得
+            'global_data'           => array(),
         );
 
         // 出力をバッファリングする
@@ -129,6 +132,7 @@ class Controller_Box extends Controller
             'item_type'  => 'モニター', 
             'flash_message_error' => \Session::get_flash('error'),
             'csrf_token' => \Security::fetch_token(),
+            'global_data'           => array(),
         );
 
         // 出力をバッファリングする
@@ -148,13 +152,13 @@ class Controller_Box extends Controller
     }
 
     /**
-     * 返却ページを表示するアクション (GET)
+     * 返却ページを表示するアクション (GET) または返却処理を実行するアクション (POST)
      * URL: /box/return/{box_id}
      * @param int $id ボックスのID
      */
     public function action_return($id = null)
     {
-         if ($id === null)
+        if ($id === null)
         {
             return $this->action_404();
         }
@@ -207,7 +211,6 @@ class Controller_Box extends Controller
         }
 
         // GETリクエストの場合、返却ページを表示
-        // 返却する備品のデータを取得し、誰が借りているか表示する
         $box_data = Model_Box::get_all_boxes(); 
         $target_box = null;
         foreach ($box_data as $box) {
@@ -235,6 +238,7 @@ class Controller_Box extends Controller
             'loaned_user_name' => $loaned_user_name,
             'flash_message_error' => \Session::get_flash('error'), // エラーメッセージを表示
             'csrf_token' => \Security::fetch_token(), // CSRFトークンをビューに渡す
+            'global_data'           => array(),
         );
 
         // 出力をバッファリングする
@@ -253,29 +257,32 @@ class Controller_Box extends Controller
         return \Response::forge($output);
     }
 
-    
-
     /**
      * 備品管理ページを表示するアクション (GET)
      * URL: /box/manage
      */
     public function action_manage()
     {
-        $boxes = Model_Box::get_all_boxes();
+         $boxes = Model_Box::get_all_boxes();
         
         $items_by_type = array();
 
-        // 備品の種類を仮で判定
+        // 備品の種類を判定するロジックを修正
         foreach ($boxes as $box) {
             $item_id = $box['box_id'];
             $item_label = $box['label'];
             
-            $item_type = 'モニター';
-            if ($item_id >= 16 && $item_id <= 20) { // 例としてB-16からB-20をType-Cコードとする
-                $item_type = 'Type-Cコード';
-            } elseif ($item_id > 20) {
-                $item_type = 'その他備品'; 
-            }
+            // 全ての備品を「モニター」として扱う、または特定の条件で種類を割り振る場合はここにロジックを記述
+            // 現在の要件では、Type-Cコードやその他備品の判定ロジックを削除します。
+            $item_type = 'モニター'; // すべての備品を「モニター」として分類
+
+            // もし本当に特定のID範囲のものがType-Cコードであれば、ここに条件を再追加することも可能です。
+            // ただし、今回は「モニターのみの管理」とのことなので、このロジックを簡素化します。
+            // if ($item_id >= 16 && $item_id <= 20) {
+            //     $item_type = 'Type-Cコード';
+            // } elseif ($item_id > 20) {
+            //     $item_type = 'その他備品'; 
+            // }
 
             if (!isset($items_by_type[$item_type])) {
                 $items_by_type[$item_type] = array();
@@ -287,15 +294,227 @@ class Controller_Box extends Controller
             );
         }
 
-        // View::forge を使用する（このビューは貸出処理の主要な流れとは異なるため、View::forgeのデバッグは後回し）
-        $view = View::forge('box/manage', array(
+        // View::forge の代わりに include 方式を使用
+        $data = array(
             'title'         => '備品管理',
             'items_by_type' => $items_by_type,
-        ));
+            'flash_message_success' => \Session::get_flash('success'), // 成功メッセージを取得
+            'flash_message_error' => \Session::get_flash('error'),     // エラーメッセージを取得
+            'global_data'           => array(),
+        );
+
+        ob_start();
+        extract($data);
+        include APPPATH.'views/box/manage.php'; // manage.phpもinclude方式に変更
+        $output = ob_get_clean();
         
-        return \Response::forge($view);
+        return \Response::forge($output);
     }
 
+
+    /**
+     * 新しい備品を追加するアクション (GET: フォーム表示, POST: フォーム処理)
+     * URL: /box/create
+     */
+    public function action_create()
+    {
+        // POSTリクエストの場合、備品追加処理を実行
+        if (\Input::method() == 'POST')
+        {
+            // CSRFトークンの検証
+            if ( ! \Security::check_token())
+            {
+                \Session::set_flash('error', '不正なリクエストです。ページを再読み込みしてください。');
+                return \Response::redirect('box/create');
+            }
+
+            $label = \Input::post('label');
+
+            // 入力値のバリデーション
+            if (empty($label))
+            {
+                \Session::set_flash('error', '備品ラベルを入力してください。');
+                return \Response::redirect('box/create');
+            }
+
+            try {
+                // Model_Box を使って新しい備品を作成
+                $new_box_id = Model_Box::create_box($label);
+
+                if ($new_box_id)
+                {
+                    \Session::set_flash('success', '新しい備品 「'.htmlspecialchars($label).'」 を追加しました。 (ID: '.$new_box_id.')');
+                    return \Response::redirect('box/manage'); // 管理ページへリダイレクト
+                }
+                else
+                {
+                    \Session::set_flash('error', '備品の追加に失敗しました。');
+                }
+            } catch (\Database_Exception $e) {
+                \Session::set_flash('error', 'データベースエラーが発生しました: ' . $e->getMessage());
+                \Log::error('Database Exception when creating box: ' . $e->getMessage());
+            } catch (\Exception $e) {
+                \Session::set_flash('error', '予期せぬエラーが発生しました: ' . $e->getMessage());
+                \Log::error('General Exception when creating box: ' . $e->getMessage());
+            }
+            return \Response::redirect('box/create'); // エラー時はフォームに戻る
+        }
+
+        // GETリクエストの場合、備品追加フォームを表示
+        // View::forge の代わりに include 方式を使用
+        $data = array(
+            'title' => '備品の追加',
+            'flash_message_error' => \Session::get_flash('error'), // エラーメッセージを表示
+            'csrf_token' => \Security::fetch_token(), // CSRFトークンをビューに渡す
+            'global_data'           => array(),
+        );
+
+        ob_start();
+        extract($data);
+        include APPPATH.'views/box/create.php'; // 新しいビューファイルをインクルード
+        $output = ob_get_clean();
+        
+        return \Response::forge($output);
+    }
+
+    /**
+     * 既存の備品を編集するアクション (GET: フォーム表示, POST: フォーム処理)
+     * URL: /box/edit/{box_id}
+     * @param int $id 編集するボックスのID
+     */
+    public function action_edit($id = null)
+    {
+        if ($id === null)
+        {
+            return $this->action_404();
+        }
+
+        // 既存の備品情報を取得
+        $box = Model_Box::get_box($id);
+        if (!$box)
+        {
+            \Session::set_flash('error', '指定された備品が見つかりませんでした。');
+            return \Response::redirect('box/manage');
+        }
+
+        // POSTリクエストの場合、備品更新処理を実行
+        if (\Input::method() == 'POST')
+        {
+            // CSRFトークンの検証
+            if ( ! \Security::check_token())
+            {
+                \Session::set_flash('error', '不正なリクエストです。ページを再読み込みしてください。');
+                return \Response::redirect('box/edit/'.$id);
+            }
+
+            $new_label = \Input::post('label');
+
+            // 入力値のバリデーション
+            if (empty($new_label))
+            {
+                \Session::set_flash('error', '備品ラベルを入力してください。');
+                return \Response::redirect('box/edit/'.$id);
+            }
+
+            try {
+                // Model_Box を使って備品を更新
+                $updated = Model_Box::update_box($id, $new_label);
+
+                if ($updated)
+                {
+                    \Session::set_flash('success', '備品 「'.htmlspecialchars($box['label']).'」 を 「'.htmlspecialchars($new_label).'」 に更新しました。');
+                    return \Response::redirect('box/manage'); // 管理ページへリダイレクト
+                }
+                else
+                {
+                    \Session::set_flash('error', '備品の更新に失敗しました。変更がなかったか、エラーが発生しました。');
+                }
+            } catch (\Database_Exception $e) {
+                \Session::set_flash('error', 'データベースエラーが発生しました: ' . $e->getMessage());
+                \Log::error('Database Exception when updating box (ID: '.$id.'): ' . $e->getMessage());
+            } catch (\Exception $e) {
+                \Session::set_flash('error', '予期せぬエラーが発生しました: ' . $e->getMessage());
+                \Log::error('General Exception when updating box (ID: '.$id.'): ' . $e->getMessage());
+            }
+            return \Response::redirect('box/edit/'.$id); // エラー時はフォームに戻る
+        }
+
+        // GETリクエストの場合、備品編集フォームを表示
+        $data = array(
+            'title' => '備品の編集',
+            'item_id' => $box['box_id'],
+            'item_label' => $box['label'], // 既存のラベルをフォームに表示するため
+            'flash_message_error' => \Session::get_flash('error'), // エラーメッセージを表示
+            'csrf_token' => \Security::fetch_token(), // CSRFトークンをビューに渡す
+            'global_data'           => array(),
+        );
+
+        ob_start();
+        extract($data);
+        include APPPATH.'views/box/edit.php'; // 新しいビューファイルをインクルード
+        $output = ob_get_clean();
+        
+        return \Response::forge($output);
+    }
+
+    /**
+     * 備品を削除するアクション (POST)
+     * URL: /box/delete/{box_id}
+     * @param int $id 削除するボックスのID
+     */
+    public function action_delete($id = null)
+    {
+        if ($id === null)
+        {
+            return $this->action_404();
+        }
+
+        // POSTリクエストであること、かつCSRFトークンが有効であることを確認
+        if (\Input::method() == 'POST')
+        {
+            if ( ! \Security::check_token())
+            {
+                \Session::set_flash('error', '不正なリクエストです。ページを再読み込みしてください。');
+                return \Response::redirect('box/manage');
+            }
+
+            try {
+                // 削除対象の備品を取得し、存在チェックとラベルの取得
+                $box = Model_Box::get_box($id);
+                if (!$box)
+                {
+                    \Session::set_flash('error', '指定された備品が見つかりませんでした。');
+                    return \Response::redirect('box/manage');
+                }
+
+                // Model_Box を使って備品を削除
+                $deleted = Model_Box::delete_box($id);
+
+                if ($deleted)
+                {
+                    \Session::set_flash('success', '備品 「'.htmlspecialchars($box['label']).'」 (ID: '.$id.') を削除しました。');
+                }
+                else
+                {
+                    \Session::set_flash('error', '備品の削除に失敗しました。');
+                }
+            } catch (\Database_Exception $e) {
+                \Session::set_flash('error', 'データベースエラーが発生しました: ' . $e->getMessage());
+                \Log::error('Database Exception when deleting box (ID: '.$id.'): ' . $e->getMessage());
+            } catch (\Exception $e) {
+                \Session::set_flash('error', '予期せぬエラーが発生しました: ' . $e->getMessage());
+                \Log::error('General Exception when deleting box (ID: '.$id.'): ' . $e->getMessage());
+            }
+        }
+        else
+        {
+            // POSTリクエスト以外で直接アクセスされた場合
+            \Session::set_flash('error', '直接アクセスは許可されていません。');
+        }
+
+        // 削除処理後、管理ページへリダイレクト
+        return \Response::redirect('box/manage');
+    }
 
     /**
      * 404 Not Found のアクション

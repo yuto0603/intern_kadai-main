@@ -229,42 +229,41 @@ class View
 	 * @param   bool  $file_override  File override
 	 * @return  string
 	 */
-	protected function process_file($file_override = false)
+
+	 /**7/5編集↓ View::forge()の動作のため*/
+	protected function process_file()
 	{
-		$clean_room = function($__file_name, array $__data)
-		{
-			extract($__data, EXTR_REFS);
+		 // ローカルデータとグローバルデータを結合
+        $data = array_merge($this->global_data, $this->data);
 
-			// Capture the view output
-			ob_start();
+        // 自動エンコードが有効な場合、データをフィルタリング
+        if ($this->auto_encode)
+        {
+            $data = static::filter_data($data);
+        }
 
-			try
-			{
-				// Load the view within the current scope
-				include $__file_name;
-			}
-			catch (\Exception $e)
-			{
-				// Delete the output buffer
-				ob_end_clean();
+        // ビューの出力をバッファリング開始
+        ob_start();
 
-				// Re-throw the exception
-				throw $e;
-			}
+        try
+        {
+            // 現在のスコープ内でビューファイルをロード（ここでHTMLが生成される）
+            extract($data, EXTR_SKIP);
+            include $this->file_name;
+        }
+        catch (\Exception $e)
+        {
+            // 例外発生時は出力バッファを削除
+            ob_end_clean();
 
-			// Get the captured output and close the buffer
-			return ob_get_clean();
-		};
+            // 例外を再スロー
+            throw $e;
+        }
 
-		// import and process the view file
-		$result = $clean_room($file_override ?: $this->file_name, $data = $this->get_data());
-
-		// disable sanitization on objects that support it
-		$this->unsanitize($data);
-
-		// return the result
-		return $result;
-	}
+        // バッファからキャプチャした出力を取得してバッファを閉じる
+        return ob_get_clean();
+    }
+	
 
 	/**
 	 * Retrieves all the data, both local and global.  It filters the data if
