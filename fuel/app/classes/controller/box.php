@@ -14,7 +14,7 @@ class Controller_Box extends Controller
         // これにより、フォーム送信時にトークンを検証できるようになります。
         \Security::fetch_token();
         \View::set_global('global_data', array());
-        \View::set_global('auto_encode', true);
+        //\View::set_global('auto_encode', true);
     }
    
     public function action_index()
@@ -263,35 +263,37 @@ class Controller_Box extends Controller
      */
     public function action_manage()
     {
-         $boxes = Model_Box::get_all_boxes();
+        $boxes = Model_Box::get_all_boxes();
         
         $items_by_type = array();
 
-        // 備品の種類を判定するロジックを修正
-        foreach ($boxes as $box) {
-            $item_id = $box['box_id'];
-            $item_label = $box['label'];
-            
-            // 全ての備品を「モニター」として扱う、または特定の条件で種類を割り振る場合はここにロジックを記述
-            // 現在の要件では、Type-Cコードやその他備品の判定ロジックを削除します。
-            $item_type = 'モニター'; // すべての備品を「モニター」として分類
+        // $boxes が空でないことを確認してからループする
+        // または、ループ内でキーの存在チェックを行う
+        if (!empty($boxes)) { // $boxes が空でないか、またはnullでないことを確認
+            foreach ($boxes as $box) {
+                // 'box_id' と 'label' キーが存在するかどうかを確認
+                // これにより、データが期待通りの形式でない場合のエラーを防ぐ
+                $item_id = isset($box['box_id']) ? $box['box_id'] : null;
+                $item_label = isset($box['label']) ? $box['label'] : '不明な備品'; // キーが存在しない場合のデフォルト値
 
-            // もし本当に特定のID範囲のものがType-Cコードであれば、ここに条件を再追加することも可能です。
-            // ただし、今回は「モニターのみの管理」とのことなので、このロジックを簡素化します。
-            // if ($item_id >= 16 && $item_id <= 20) {
-            //     $item_type = 'Type-Cコード';
-            // } elseif ($item_id > 20) {
-            //     $item_type = 'その他備品'; 
-            // }
+                // IDが取得できない場合はスキップ（またはエラーログ）
+                if ($item_id === null) {
+                    \Log::warning('Skipping box entry due to missing box_id: ' . print_r($box, true));
+                    continue;
+                }
+                
+                // 全ての備品を「モニター」として分類
+                $item_type = 'モニター'; 
 
-            if (!isset($items_by_type[$item_type])) {
-                $items_by_type[$item_type] = array();
+                if (!isset($items_by_type[$item_type])) {
+                    $items_by_type[$item_type] = array();
+                }
+                $items_by_type[$item_type][] = array(
+                    'box_id' => $item_id,
+                    'label'  => $item_label,
+                    'type'   => $item_type,
+                );
             }
-            $items_by_type[$item_type][] = array(
-                'box_id' => $item_id,
-                'label'  => $item_label,
-                'type'   => $item_type,
-            );
         }
 
         // View::forge の代わりに include 方式を使用
@@ -377,87 +379,7 @@ class Controller_Box extends Controller
         return \Response::forge($output);
     }
 
-    /**
-     * 既存の備品を編集するアクション (GET: フォーム表示, POST: フォーム処理)
-     * URL: /box/edit/{box_id}
-     * @param int $id 編集するボックスのID
-     */
-    public function action_edit($id = null)
-    {
-        if ($id === null)
-        {
-            return $this->action_404();
-        }
-
-        // 既存の備品情報を取得
-        $box = Model_Box::get_box($id);
-        if (!$box)
-        {
-            \Session::set_flash('error', '指定された備品が見つかりませんでした。');
-            return \Response::redirect('box/manage');
-        }
-
-        // POSTリクエストの場合、備品更新処理を実行
-        if (\Input::method() == 'POST')
-        {
-            // CSRFトークンの検証
-            if ( ! \Security::check_token())
-            {
-                \Session::set_flash('error', '不正なリクエストです。ページを再読み込みしてください。');
-                return \Response::redirect('box/edit/'.$id);
-            }
-
-            $new_label = \Input::post('label');
-
-            // 入力値のバリデーション
-            if (empty($new_label))
-            {
-                \Session::set_flash('error', '備品ラベルを入力してください。');
-                return \Response::redirect('box/edit/'.$id);
-            }
-
-            try {
-                // Model_Box を使って備品を更新
-                $updated = Model_Box::update_box($id, $new_label);
-
-                if ($updated)
-                {
-                    \Session::set_flash('success', '備品 「'.htmlspecialchars($box['label']).'」 を 「'.htmlspecialchars($new_label).'」 に更新しました。');
-                    return \Response::redirect('box/manage'); // 管理ページへリダイレクト
-                }
-                else
-                {
-                    \Session::set_flash('error', '備品の更新に失敗しました。変更がなかったか、エラーが発生しました。');
-                }
-            } catch (\Database_Exception $e) {
-                \Session::set_flash('error', 'データベースエラーが発生しました: ' . $e->getMessage());
-                \Log::error('Database Exception when updating box (ID: '.$id.'): ' . $e->getMessage());
-            } catch (\Exception $e) {
-                \Session::set_flash('error', '予期せぬエラーが発生しました: ' . $e->getMessage());
-                \Log::error('General Exception when updating box (ID: '.$id.'): ' . $e->getMessage());
-            }
-            return \Response::redirect('box/edit/'.$id); // エラー時はフォームに戻る
-        }
-
-        // GETリクエストの場合、備品編集フォームを表示
-        $data = array(
-            'title' => '備品の編集',
-            'item_id' => $box['box_id'],
-            'item_label' => $box['label'], // 既存のラベルをフォームに表示するため
-            'flash_message_error' => \Session::get_flash('error'), // エラーメッセージを表示
-            'csrf_token' => \Security::fetch_token(), // CSRFトークンをビューに渡す
-            'global_data'           => array(),
-        );
-
-        ob_start();
-        extract($data);
-        include APPPATH.'views/box/edit.php'; // 新しいビューファイルをインクルード
-        $output = ob_get_clean();
-        
-        return \Response::forge($output);
-    }
-
-    /**
+     /**
      * 備品を削除するアクション (POST)
      * URL: /box/delete/{box_id}
      * @param int $id 削除するボックスのID
@@ -466,7 +388,9 @@ class Controller_Box extends Controller
     {
         if ($id === null)
         {
-            return $this->action_404();
+            \Session::set_flash('error', '削除する備品のIDが指定されていません。');
+            \Response::redirect('box/manage'); // 404ではなく管理ページへリダイレクト
+            exit;
         }
 
         // POSTリクエストであること、かつCSRFトークンが有効であることを確認
@@ -475,7 +399,8 @@ class Controller_Box extends Controller
             if ( ! \Security::check_token())
             {
                 \Session::set_flash('error', '不正なリクエストです。ページを再読み込みしてください。');
-                return \Response::redirect('box/manage');
+                \Response::redirect('box/manage');
+                exit;
             }
 
             try {
@@ -484,9 +409,18 @@ class Controller_Box extends Controller
                 if (!$box)
                 {
                     \Session::set_flash('error', '指定された備品が見つかりませんでした。');
-                    return \Response::redirect('box/manage');
+                    \Response::redirect('box/manage');
+                    exit;
                 }
 
+                // 備品が貸出中であるかチェック
+                $loan_status = Model_Loan::get_box_loan_status($id);
+                if ($loan_status && $loan_status['status'] === '貸出中') {
+                    \Session::set_flash('error', 'この備品は現在貸出中のため、削除できません。');
+                    \Response::redirect('box/manage');
+                    exit;
+                }
+                
                 // Model_Box を使って備品を削除
                 $deleted = Model_Box::delete_box($id);
 
@@ -500,10 +434,10 @@ class Controller_Box extends Controller
                 }
             } catch (\Database_Exception $e) {
                 \Session::set_flash('error', 'データベースエラーが発生しました: ' . $e->getMessage());
-                \Log::error('Database Exception when deleting box (ID: '.$id.'): ' . $e->getMessage());
+                \Log::error('Database Exception when deleting box (ID: '.$id.') in action_delete: ' . $e->getMessage());
             } catch (\Exception $e) {
                 \Session::set_flash('error', '予期せぬエラーが発生しました: ' . $e->getMessage());
-                \Log::error('General Exception when deleting box (ID: '.$id.'): ' . $e->getMessage());
+                \Log::error('General Exception when deleting box (ID: '.$id.') in action_delete: ' . $e->getMessage());
             }
         }
         else
@@ -513,8 +447,11 @@ class Controller_Box extends Controller
         }
 
         // 削除処理後、管理ページへリダイレクト
-        return \Response::redirect('box/manage');
+        \Response::redirect('box/manage');
+        exit;
     }
+
+   
 
     /**
      * 404 Not Found のアクション
