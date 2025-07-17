@@ -68,11 +68,6 @@
 </head>
 <body>
 
-    <div class="lang-switcher">
-        <a href="#" class="lang-btn active">日本語</a>
-        <a href="#" class="lang-btn">English</a>
-    </div>
-
     <div class="container">
         <h1 class="header-title">備品貸出管理</h1>
 

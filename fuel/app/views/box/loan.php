@@ -24,10 +24,6 @@
 </head>
 <body>
 
-    <div class="lang-switcher">
-        <a href="#" class="lang-btn active">日本語</a>
-        <a href="#" class="lang-btn">English</a>
-    </div>
 
     <div class="container">
         <h1 class="header-title">備品貸出管理</h1>
@@ -50,8 +46,8 @@
         <div class="form-section">
             <form action="<?php echo Uri::base(); ?>box/loan/<?php echo $item_id; ?>" method="post">
                 <?php echo \Form::csrf(); // CSRFトークンの隠しフィールドを生成 ?>
-                <label for="userName" class="form-label">あなたの名前:</label>
-                <input type="text" id="userName" name="user_name" class="form-input" placeholder="名前を入力してください" required>
+                <label for="userName" class="form-label">名前(Name):</label>
+                <input type="text" id="userName" name="user_name" class="form-input" placeholder="名前を入力してください(Please enter your name)" required>
                 
                 <button type="submit" class="action-button loan">貸し出す</button>
             </form>

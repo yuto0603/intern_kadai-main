@@ -263,26 +263,29 @@ class Controller_Box extends Controller
      */
     public function action_manage()
     {
-        $boxes = Model_Box::get_all_boxes();
+         $boxes = Model_Box::get_all_boxes();
         
         $items_by_type = array();
 
-        // $boxes が空でないことを確認してからループする
-        // または、ループ内でキーの存在チェックを行う
-        if (!empty($boxes)) { // $boxes が空でないか、またはnullでないことを確認
+        // ここで $boxes が配列であり、かつ空でないことを確認
+        if (is_array($boxes) && !empty($boxes)) {
             foreach ($boxes as $box) {
-                // 'box_id' と 'label' キーが存在するかどうかを確認
-                // これにより、データが期待通りの形式でない場合のエラーを防ぐ
-                $item_id = isset($box['box_id']) ? $box['box_id'] : null;
-                $item_label = isset($box['label']) ? $box['label'] : '不明な備品'; // キーが存在しない場合のデフォルト値
+                // 各 $box が配列であること、そして 'box_id' と 'label' キーが存在し、null でないことを確認
+                // null 合体演算子 (??) を使用して、より簡潔に記述
+                $item_id = $box['box_id'] ?? null; // PHP 7.0 以上
+                $item_label = $box['label'] ?? '不明な備品'; // PHP 7.0 以上
 
-                // IDが取得できない場合はスキップ（またはエラーログ）
+                // もし PHP のバージョンが古い場合 (PHP 5.x), 以下のように記述
+                // $item_id = isset($box['box_id']) ? $box['box_id'] : null;
+                // $item_label = isset($box['label']) ? $box['label'] : '不明な備品';
+
+
+                // IDが取得できない場合は、その備品はスキップする（これはそのまま）
                 if ($item_id === null) {
-                    \Log::warning('Skipping box entry due to missing box_id: ' . print_r($box, true));
+                    \Log::warning('Skipping box entry in manage due to missing or null box_id: ' . print_r($box, true));
                     continue;
                 }
                 
-                // 全ての備品を「モニター」として分類
                 $item_type = 'モニター'; 
 
                 if (!isset($items_by_type[$item_type])) {
@@ -294,9 +297,13 @@ class Controller_Box extends Controller
                     'type'   => $item_type,
                 );
             }
+        } else {
+            // $boxes が空または配列でない場合のログ出力
+            \Log::info('No boxes found or invalid box data format in action_manage.');
+            // ここで $items_by_type は空のままなので、問題なく処理が進む
         }
 
-        // View::forge の代わりに include 方式を使用
+        // 変数をビューファイル内で使えるようにする
         $data = array(
             'title'         => '備品管理',
             'items_by_type' => $items_by_type,
@@ -307,7 +314,7 @@ class Controller_Box extends Controller
 
         ob_start();
         extract($data);
-        include APPPATH.'views/box/manage.php'; // manage.phpもinclude方式に変更
+        include APPPATH.'views/box/manage.php';
         $output = ob_get_clean();
         
         return \Response::forge($output);
@@ -386,10 +393,10 @@ class Controller_Box extends Controller
      */
     public function action_delete($id = null)
     {
-        if ($id === null)
+      if ($id === null)
         {
             \Session::set_flash('error', '削除する備品のIDが指定されていません。');
-            \Response::redirect('box/manage'); // 404ではなく管理ページへリダイレクト
+            \Response::redirect('box/manage');
             exit;
         }
 
@@ -404,16 +411,12 @@ class Controller_Box extends Controller
             }
 
             try {
-                // 削除対象の備品を取得し、存在チェックとラベルの取得
-                $box = Model_Box::get_box($id);
-                if (!$box)
-                {
-                    \Session::set_flash('error', '指定された備品が見つかりませんでした。');
-                    \Response::redirect('box/manage');
-                    exit;
-                }
+                // ここで削除前に備品情報を取得する必要がある場合（例: ログに残すため）
+                // ただし、表示に失敗する可能性のある 'label' へのアクセスは避ける
+                $box_exists_before_delete = (Model_Box::get_box($id) !== null);
 
                 // 備品が貸出中であるかチェック
+                // このチェックは削除を試みる前に行うため、問題ないはずです。
                 $loan_status = Model_Loan::get_box_loan_status($id);
                 if ($loan_status && $loan_status['status'] === '貸出中') {
                     \Session::set_flash('error', 'この備品は現在貸出中のため、削除できません。');
@@ -426,23 +429,26 @@ class Controller_Box extends Controller
 
                 if ($deleted)
                 {
-                    \Session::set_flash('success', '備品 「'.htmlspecialchars($box['label']).'」 (ID: '.$id.') を削除しました。');
+                    // 備品IDのみで成功メッセージを表示
+                    \Session::set_flash('success', '備品 (ID: '.$id.') を削除しました。');
+                    \Log::info('Box ID: ' . $id . ' deleted successfully.'); // ログにはIDと元のラベルも残せる
                 }
                 else
                 {
-                    \Session::set_flash('error', '備品の削除に失敗しました。');
+                    // 削除失敗のメッセージ
+                    \Session::set_flash('error', '備品の削除に失敗しました。指定された備品が存在しないか、エラーが発生しました。');
+                    \Log::error('Failed to delete box ID: ' . $id . '.');
                 }
             } catch (\Database_Exception $e) {
-                \Session::set_flash('error', 'データベースエラーが発生しました: ' . $e->getMessage());
-                \Log::error('Database Exception when deleting box (ID: '.$id.') in action_delete: ' . $e->getMessage());
+                \Session::set_flash('error', 'データベースエラーが発生しました。');
+                \Log::error('Database Exception in delete for box ID ' . $id . ': ' . $e->getMessage());
             } catch (\Exception $e) {
-                \Session::set_flash('error', '予期せぬエラーが発生しました: ' . $e->getMessage());
-                \Log::error('General Exception when deleting box (ID: '.$id.') in action_delete: ' . $e->getMessage());
+                \Session::set_flash('error', '予期せぬエラーが発生しました。');
+                \Log::error('General Exception in delete for box ID ' . $id . ': ' . $e->getMessage());
             }
         }
         else
         {
-            // POSTリクエスト以外で直接アクセスされた場合
             \Session::set_flash('error', '直接アクセスは許可されていません。');
         }
 

@@ -24,11 +24,6 @@
 </head>
 <body>
 
-    <div class="lang-switcher">
-        <a href="#" class="lang-btn active">日本語</a>
-        <a href="#" class="lang-btn">English</a>
-    </div>
-
     <div class="container">
         <h1 class="header-title">備品貸出管理</h1>
 
@@ -58,7 +53,7 @@
             <form action="<?php echo Uri::base(); ?>box/return/<?php echo $item_id; ?>" method="post">
                 <?php echo \Form::csrf(); // CSRFトークンの隠しフィールドを生成 ?>
                 <p>この備品を返却しますか？</p>
-                <button type="submit" class="action-button return">返却する</button>
+                <button type="submit" class="action-button return">返却する(Return)</button>
             </form>
         </div>
 

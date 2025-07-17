@@ -94,21 +94,16 @@
 </head>
 <body>
 
-    <div class="lang-switcher">
-        <a href="#" class="lang-btn active">日本語</a>
-        <a href="#" class="lang-btn">English</a>
-    </div>
-
     <div class="container">
-        <h1 class="header-title">備品貸出管理</h1>
+        <h1 class="header-title">備品貸出管理 </h1>
 
         <div class="tab-nav">
-            <a href="<?php echo Uri::base(); ?>box" class="tab-nav-item active">備品一覧</a>
-            <a href="<?php echo Uri::base(); ?>box/manage" class="tab-nav-item">備品管理</a>
+            <a href="<?php echo Uri::base(); ?>box" class="tab-nav-item active">備品一覧 (Equipment List)</a>
+            <a href="<?php echo Uri::base(); ?>box/manage" class="tab-nav-item">備品管理 (Equipment Management)</a>
         </div>
 
-        <h2 class="section-title">現在の備品状況</h2>
-        <h3 class="section-title">モニター</h3>
+        <h2 class="section-title">現在の備品状況(Equipment Status)</h2>
+        <h3 class="section-title">モニター(Monitor)</h3>
 
         <?php if (isset($flash_message_success) && !empty($flash_message_success)): ?>
             <div class="flash-message success">
@@ -131,7 +126,7 @@
                         // 貸出状況に基づいてカードのクラスと表示テキストを決定
                         $is_loaned = ($box['status'] === '貸出中');
                         $card_class = $is_loaned ? 'loaned' : 'available';
-                        $status_text = $is_loaned ? '貸出中' : '貸出可能';
+                        $status_text = $is_loaned ? '貸出中 Borrowed' : '貸出可能 (Available)';
                         
                         // 貸出中の場合は返却ページへ、貸出可能の場合は貸出ページへリンク
                         $card_link_url = $is_loaned ? 'return/' . $box['box_id'] : 'loan/' . $box['box_id'];

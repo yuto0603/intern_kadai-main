@@ -6,7 +6,7 @@
     <title><?php echo $title; ?></title>
     <?php echo Asset::css('style.css'); ?>
     <style>
-        /* フラッシュメッセージのスタイルは他のビューファイルからコピー済みと仮定 */
+        
         .flash-message {
             padding: 10px;
             margin-bottom: 20px;
@@ -20,15 +20,10 @@
         .flash-message.error {
             background-color: #f44336; /* 赤 */
         }
-        /* その他のCSSスタイルは style.css に依存 */
+       
     </style>
 </head>
 <body>
-
-    <div class="lang-switcher">
-        <a href="#" class="lang-btn active">日本語</a>
-        <a href="#" class="lang-btn">English</a>
-    </div>
 
     <div class="container">
         <h1 class="header-title">備品貸出管理</h1>
