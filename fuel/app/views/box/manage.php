@@ -5,66 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $title; ?></title>
     <?php echo Asset::css('style.css'); ?>
-    <style>
-        /* フラッシュメッセージのスタイルは他のビューファイルからコピー済みと仮定 */
-        .flash-message {
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            font-weight: bold;
-            color: #fff;
-        }
-        .flash-message.success {
-            background-color: #4CAF50; /* 緑 */
-        }
-        .flash-message.error {
-            background-color: #f44336; /* 赤 */
-        }
-
-        /* 管理ページ固有のスタイル */
-        .item-list-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        .item-list-table th, .item-list-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        .item-list-table th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-        .action-buttons {
-            display: flex;
-            gap: 5px;
-        }
-        .action-buttons a, .action-buttons button {
-            padding: 5px 10px;
-            border-radius: 5px;
-            text-decoration: none;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-            font-size: 0.9em;
-        }
-        .action-buttons .edit-btn {
-            background-color: #007bff; /* 青 */
-        }
-        .action-buttons .delete-btn {
-            background-color: #dc3545; /* 赤 */
-        }
-        .add-item-link {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 10px 15px;
-            background-color: #28a745; /* 緑 */
-            color: #fff;
-            text-decoration: none;
-            border-radius: 5px;
-        }
-    </style>
+    <?php echo Asset::css('flash.css'); ?>
+    <?php echo Asset::css('manage_style.css'); ?>
+   
 </head>
 <body>
 

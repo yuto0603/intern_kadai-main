@@ -5,22 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $title; ?></title>
     <?php echo Asset::css('style.css'); ?>
-    <style>
-        /* フラッシュメッセージのスタイル */
-        .flash-message {
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            font-weight: bold;
-            color: #fff;
-        }
-        .flash-message.success {
-            background-color: #4CAF50; /* 緑 */
-        }
-        .flash-message.error {
-            background-color: #f44336; /* 赤 */
-        }
-    </style>
+    <?php echo Asset::css('flash.css'); ?>
 </head>
 <body>
 

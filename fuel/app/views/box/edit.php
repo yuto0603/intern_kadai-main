@@ -5,30 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $title; ?></title>
     <?php echo Asset::css('style.css'); ?>
-    <style>
-        /* フラッシュメッセージのスタイルは他のビューファイルからコピー済みと仮定 */
-        .flash-message {
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            font-weight: bold;
-            color: #fff;
-        }
-        .flash-message.success {
-            background-color: #4CAF50; /* 緑 */
-        }
-        .flash-message.error {
-            background-color: #f44336; /* 赤 */
-        }
-        /* その他のCSSスタイルは style.css に依存 */
-    </style>
+    <?php echo Asset::css('flash.css'); ?>
 </head>
 <body>
-
-    <div class="lang-switcher">
-        <a href="#" class="lang-btn active">日本語</a>
-        <a href="#" class="lang-btn">English</a>
-    </div>
 
     <div class="container">
         <h1 class="header-title">備品貸出管理</h1>

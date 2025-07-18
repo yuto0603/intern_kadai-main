@@ -6,6 +6,7 @@ class Model_Box
     {
         $result = \DB::select('box_id', 'label')
                       ->from('boxes')
+                       ->order_by('box_id', 'ASC')//box_id昇順へ変更
                       ->execute();
                       
         return $result->as_array();

@@ -6,91 +6,9 @@
     <title><?php echo $title; ?></title>
     
     <?php echo Asset::css('style.css'); ?>
-    <style>
-        /* フラッシュメッセージのスタイル */
-        .flash-message {
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            font-weight: bold;
-            color: #fff;
-        }
-        .flash-message.success {
-            background-color: #4CAF50; /* 緑 */
-        }
-        .flash-message.error {
-            background-color: #f44336; /* 赤 */
-        }
-
-        /* 備品カードのスタイル */
-        .item-card {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-            text-decoration: none;
-            color: #333;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between; /* 貸出情報を下部に寄せるため */
-            height: 150px; /* カードの高さを均一にする */
-        }
-
-        .item-card.available {
-            background-color: #e6ffe6; /* 薄い緑 */
-            border-color: #4CAF50;
-        }
-
-        .item-card.loaned {
-            background-color: #ffe6e6; /* 薄い赤 */
-            border-color: #f44336;
-        }
-
-        .item-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-
-        .item-name {
-            font-size: 1.5em;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .item-type {
-            font-size: 0.9em;
-            color: #666;
-            margin-bottom: 10px;
-        }
-
-        .item-status {
-            font-size: 1.1em;
-            font-weight: bold;
-            color: #333; /* デフォルトの文字色 */
-        }
-
-        .item-card.available .item-status {
-            color: #4CAF50; /* 貸出可能時の文字色 */
-        }
-
-        .item-card.loaned .item-status {
-            color: #f44336; /* 貸出中時の文字色 */
-        }
-
-        .loaned-user-info {
-            font-size: 0.9em;
-            color: #777;
-            margin-top: 5px;
-        }
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 20px;
-            padding: 20px 0;
-        }
-    </style>
+    <?php echo Asset::css('flash.css'); ?>
+    <?php echo Asset::css('card_style.css'); ?>
+    
 </head>
 <body>
 
