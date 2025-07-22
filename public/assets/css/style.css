@@ -3,24 +3,23 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f0f2f5; /* 薄いグレーの背景 */
+    background-color: #f0f2f5; 
     color: #333;
 }
 
 /* Main Container - ページ全体を囲むコンテナ */
 .container {
-    max-width: 1200px; /* 最大幅を設定 */
-    margin: 30px auto; /* 上下左右中央寄せ */
-    padding: 20px;
-    background-color: #ffffff; /* 白い背景 */
-    border-radius: 8px; /* 角丸 */
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* 影 */
+    max-width: 1200px; 
+    margin: 30px auto; 
+    background-color: #ffffff; 
+    border-radius: 8px; 
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); 
 }
 
 /* Header Styles */
 .header-title {
     font-size: 2.2em;
-    color: #3498db; /* 青色 */
+    color: #3498db;
     text-align: center;
     margin-bottom: 30px;
     font-weight: 600;
@@ -62,27 +61,27 @@ body {
 
 /* Cards Grid Layout */
 .card-grid {
-    display: grid; /* グリッドレイアウトを使用 */
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* レスポンシブな列数 */
-    gap: 20px; /* カード間のスペース */
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+    gap: 20px; 
     padding: 10px;
 }
 
 /* Individual Card Styles */
 .item-card {
-    background-color: #f2fff2; /* 薄い緑色の背景 */
-    border: 1px solid #c8e6c9; /* 緑色の枠線 */
-    border-radius: 8px; /* 角丸 */
+    background-color: #f2fff2; 
+    border: 1px solid #c8e6c9; 
+    border-radius: 8px; 
     padding: 15px;
     text-align: center;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08); /* 薄い影 */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08); 
     transition: transform 0.2s ease-in-out;
-    text-decoration: none; /* リンクのデフォルト下線を消す */
-    color: inherit; /* リンクの色を継承 */
+    text-decoration: none; 
+    color: inherit; 
 }
 
 .item-card:hover {
-    transform: translateY(-5px); /* ホバーで少し浮き上がる */
+    transform: translateY(-5px); 
 }
 
 .item-name {
@@ -101,7 +100,7 @@ body {
 .item-status {
     font-size: 1.1em;
     font-weight: 500;
-    color: #4CAF50; /* 緑色の文字 */
+    color: #4CAF50; 
 }
 
 /* Language Switcher (簡易版) */
@@ -135,13 +134,14 @@ body {
 
 /* Item Card Variations (貸出中) */
 .item-card.loaned {
-    background-color: #fff2f2; /* 薄い赤色の背景 */
-    border: 1px solid #e6c8c8; /* 赤色の枠線 */
+    background-color: #fff2f2; 
+    border: 1px solid #e6c8c8; 
 }
 .item-card.loaned .item-name,
 .item-card.loaned .item-status {
-    color: #c0392b; /* 濃い赤色の文字 */
+    color: #c0392b;
 }
+
 /* 借りている人の名前のスタイル */
 .item-card .loaned-by {
     font-size: 0.8em;
@@ -300,3 +300,4 @@ body {
 .action-button.delete:hover {
     background-color: #e0a800;
 }
+

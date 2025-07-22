@@ -121,7 +121,7 @@ return array(
 	 * Security settings
 	 */
 	'security' => array(
-		// 'csrf_autoload'            => false,
+		'csrf_autoload'            => true,
 		// 'csrf_autoload_methods'    => array('post', 'put', 'delete'),
 		// 'csrf_bad_request_on_fail' => false,
 		// 'csrf_auto_token'          => false,

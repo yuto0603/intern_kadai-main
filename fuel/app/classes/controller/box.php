@@ -2,16 +2,12 @@
 
 class Controller_Box extends Controller
 {
-    /**
-     * FuelPHPのbeforeメソッド
-     * 全てのアクションが実行される前に呼び出されます。
-     * ここではCSRFトークンの生成を行います。
-     */
     public function before()
     {
         parent::before();
         \Security::fetch_token();
         \View::set_global('global_data', array());
+        \View::set_global('auto_encode', true); 
     }
    
     public function action_index()
@@ -31,25 +27,28 @@ class Controller_Box extends Controller
         $data = array(
             'boxes' => $detailed_boxes,
             'title' => '備品一覧',
-            'flash_message_success' => \Session::get_flash('success'), 
-            'flash_message_error' => \Session::get_flash('error'),  
+            'flash_message_success' => \Session::get_flash('success'), // 成功
+            'flash_message_error' => \Session::get_flash('error'),     // エラー
             'global_data'           => array(),
         );
 
         // 出力をバッファリングする
         ob_start();
+        
         // 変数を現在のスコープにインポート
         extract($data);
+        
         // ビューファイルを直接インクルード
         include APPPATH.'views/box/index.php';
+        
         // バッファの内容を取得
         $output = ob_get_clean();
+
         // レスポンスとして返す
         return \Response::forge($output);
     }
 
     /**
-     * 貸出ページを表示するアクション (GET) または貸出処理を実行するアクション (POST)
      * URL: /box/loan/{box_id}
      * @param int $id ボックスのID
      */
@@ -63,7 +62,7 @@ class Controller_Box extends Controller
         // POSTリクエストの場合、貸出処理を実行
         if (\Input::method() == 'POST')
         {
-            // CSRFトークンの検証 (セキュリティ要件)
+            // CSRFトークンの検証 
             if ( ! \Security::check_token())
             {
                 \Session::set_flash('error', '不正なリクエストです。ページを再読み込みしてください。');
@@ -116,12 +115,18 @@ class Controller_Box extends Controller
             return $this->action_404();
         }
 
+        // 貸出状況を取得し、借りているユーザー名を表示に使う
+        $loan_status = Model_Loan::get_box_loan_status($id);
+        $loaned_user_name = ($loan_status && $loan_status['status'] === '貸出中') ? $loan_status['user_name'] : '貸出中ではありません';
+
+
         // 変数をビューファイル内で使えるようにする
         $data = array(
-            'title'      => '備品の貸出',
-            'item_id'    => $target_box['box_id'],
+            'title'            => '備品の貸出',
+            'item_id'          => $target_box['box_id'],
             'item_label' => $target_box['label'],
             'item_type'  => 'モニター', 
+            'loaned_user_name' => $loaned_user_name,
             'flash_message_error' => \Session::get_flash('error'),
             'csrf_token' => \Security::fetch_token(),
             'global_data'           => array(),
@@ -129,18 +134,21 @@ class Controller_Box extends Controller
 
         // 出力をバッファリングする
         ob_start();
+        
         // 変数を現在のスコープにインポート
         extract($data);
+        
         // ビューファイルを直接インクルード
         include APPPATH.'views/box/loan.php';
+        
         // バッファの内容を取得
         $output = ob_get_clean();
+
         // レスポンスとして返す
         return \Response::forge($output);
     }
 
     /**
-     * 返却ページを表示するアクション (GET) または返却処理を実行するアクション (POST)
      * URL: /box/return/{box_id}
      * @param int $id ボックスのID
      */
@@ -150,6 +158,7 @@ class Controller_Box extends Controller
         {
             return $this->action_404();
         }
+
         // POSTリクエストの場合、返却処理を実行
         if (\Input::method() == 'POST')
         {
@@ -223,19 +232,23 @@ class Controller_Box extends Controller
             'item_label'       => $target_box['label'],
             'item_type'        => 'モニター', 
             'loaned_user_name' => $loaned_user_name,
-            'flash_message_error' => \Session::get_flash('error'), // エラーメッセージを表示
-            'csrf_token' => \Security::fetch_token(), // CSRFトークンをビューに渡す
+            'flash_message_error' => \Session::get_flash('error'),
+            'csrf_token' => \Security::fetch_token(),
             'global_data'           => array(),
         );
 
         // 出力をバッファリングする
         ob_start();
+        
         // 変数を現在のスコープにインポート
         extract($data);
+        
         // ビューファイルを直接インクルード
         include APPPATH.'views/box/return.php';
+        
         // バッファの内容を取得
         $output = ob_get_clean();
+
         // レスポンスとして返す
         return \Response::forge($output);
     }
@@ -246,45 +259,37 @@ class Controller_Box extends Controller
      */
     public function action_manage()
     {
-         $boxes = Model_Box::get_all_boxes();
-        
-        $items_by_type = array();
+        // 備品データを取得 (Model_Box::get_all_boxes() は以前修正済み)
+        $boxes = Model_Box::get_all_boxes();
 
-        // ここで $boxes が配列であり、かつ空でないことを確認
+        // 各備品の貸出状況と借りているユーザー名を取得して追加 (Knockout.js ViewModelに直接渡せるように)
+        $detailed_boxes = [];
+        // $boxes が配列でない場合や空の場合に備える
         if (is_array($boxes) && !empty($boxes)) {
             foreach ($boxes as $box) {
-                $item_id = $box['box_id'] ?? null; 
-                $item_label = $box['label'] ?? '不明な備品'; 
+                // box_id と label の存在を確実にチェック
+                $box_id = isset($box['box_id']) ? $box['box_id'] : null;
+                $label = isset($box['label']) ? $box['label'] : 'Unknown Label';
 
-
-                // IDが取得できない場合は、その備品はスキップする（これはそのまま）
-                if ($item_id === null) {
-                    \Log::warning('Skipping box entry in manage due to missing or null box_id: ' . print_r($box, true));
-                    continue;
+                if ($box_id === null) {
+                    \Log::warning('Skipping box entry due to missing box_id in action_manage: ' . print_r($box, true));
+                    continue; // box_id がなければスキップ
                 }
-                
-                $item_type = 'モニター'; 
 
-                if (!isset($items_by_type[$item_type])) {
-                    $items_by_type[$item_type] = array();
-                }
-                $items_by_type[$item_type][] = array(
-                    'box_id' => $item_id,
-                    'label'  => $item_label,
-                    'type'   => $item_type,
-                );
+                $loan_status = Model_Loan::get_box_loan_status($box_id); 
+                $box['status'] = $loan_status ? $loan_status['status'] : '貸出可能';
+                $box['current_user_name'] = $loan_status ? $loan_status['user_name'] : null;
+                $detailed_boxes[] = $box;
             }
-        } else {
-            // $boxes が空または配列でない場合のログ出力
-            \Log::info('No boxes found or invalid box data format in action_manage.');
         }
 
-        // 変数をビューファイル内で使えるようにする
+        // View::forge の代わりに include 方式を使用
         $data = array(
             'title'         => '備品管理',
-            'items_by_type' => $items_by_type,
-            'flash_message_success' => \Session::get_flash('success'), // 成功メッセージを取得
-            'flash_message_error' => \Session::get_flash('error'),     // エラーメッセージを取得
+            // Knockout.js の初期データとして JSON 形式でビューに渡す
+            'initial_boxes_json' => json_encode($detailed_boxes), // 詳細な備品データを渡す
+            'flash_message_success' => \Session::get_flash('success'),
+            'flash_message_error' => \Session::get_flash('error'),
             'global_data'           => array(),
         );
 
@@ -296,78 +301,218 @@ class Controller_Box extends Controller
         return \Response::forge($output);
     }
 
+    /**
+     * 新しい備品を追加するアクション (Ajax用)
+     * POSTリクエストを受け取り、JSON形式で結果を返す
+     * URL: /box/api/create
+     */
+    public function action_api_create()
+    {
+        // Ajaxリクエストかどうかの確認
+        if (!\Input::is_ajax()) {
+            return \Response::forge(json_encode(['status' => 'error', 'message' => 'Invalid request method.']), 400);
+        }
+
+        if (\Input::method() != 'POST') {
+            return \Response::forge(json_encode(['status' => 'error', 'message' => 'Method not allowed.']), 405);
+        }
+
+        // CSRFトークンの検証
+        if ( ! \Security::check_token())
+        {
+            return \Response::forge(json_encode(['status' => 'error', 'message' => 'CSRF token mismatch. Please reload.']), 403);
+        }
+
+        $label = \Input::post('label');
+
+        if (empty($label))
+        {
+            return \Response::forge(json_encode(['status' => 'error', 'message' => '備品ラベルを入力してください。']), 400);
+        }
+
+        try {
+            $new_box_id = Model_Box::create_box($label);
+
+            if ($new_box_id)
+            {
+                // 成功時は新しい備品のIDとラベル、初期ステータスを返す
+                // Model_Loan::get_box_loan_status() は Ajax で呼び出すのではなく、
+                // 初期値として「貸出可能」を設定します。
+                return \Response::forge(json_encode([
+                    'status' => 'success',
+                    'message' => '新しい備品 「'.htmlspecialchars($label).'」 を追加しました。',
+                    'box' => [ // Knockout.js ViewModelが期待する形式で返す
+                        'box_id' => $new_box_id,
+                        'label' => $label,
+                        'status' => '貸出可能',
+                        'current_user_name' => null
+                    ],
+                    'new_csrf_token' => \Security::fetch_token() // ★新しいトークンを追加★
+                ]), 200);
+            }
+            else
+            {
+                return \Response::forge(json_encode(['status' => 'error', 'message' => '備品の追加に失敗しました。']), 500);
+            }
+        } catch (\Database_Exception $e) {
+            \Log::error('Database Exception when creating box via API: ' . $e->getMessage());
+            return \Response::forge(json_encode(['status' => 'error', 'message' => 'データベースエラーが発生しました。']), 500);
+        } catch (\Exception $e) {
+            \Log::error('General Exception when creating box via API: ' . $e->getMessage());
+            return \Response::forge(json_encode(['status' => 'error', 'message' => '予期せぬエラーが発生しました。']), 500);
+        } 
+    }
 
     /**
-     * 新しい備品を追加するアクション (GET: フォーム表示, POST: フォーム処理)
-     * URL: /box/create
+     * 備品を削除するアクション (Ajax用)
+     * POSTリクエストを受け取り、JSON形式で結果を返す
+     * URL: /box/api/delete/{box_id}
+     * @param int $id 削除するボックスのID
      */
-    public function action_create()
+    public function action_api_delete($id = null)
     {
-        // POSTリクエストの場合、備品追加処理を実行
+        if ($id === null) {
+            return \Response::forge(json_encode(['status' => 'error', 'message' => '削除する備品のIDが指定されていません。']), 400);
+        }
+
+        // AjaxリクエストかつPOSTメソッドであることを確認
+        if (!\Input::is_ajax() || \Input::method() != 'POST') {
+            return \Response::forge(json_encode(['status' => 'error', 'message' => 'Invalid request.']), 400);
+        }
+
+        // CSRFトークンの検証
+        if ( ! \Security::check_token())
+        {
+            return \Response::forge(json_encode(['status' => 'error', 'message' => 'CSRF token mismatch. Please reload.']), 403);
+        }
+
+        try {
+            // 削除対象の備品を取得し、存在チェック
+            $box = Model_Box::get_box($id);
+            if (!$box)
+            {
+                return \Response::forge(json_encode(['status' => 'error', 'message' => '指定された備品が見つかりませんでした。']), 404);
+            }
+
+            // 備品が貸出中であるかチェック
+            $loan_status = Model_Loan::get_box_loan_status($id);
+            if ($loan_status && $loan_status['status'] === '貸出中') {
+                return \Response::forge(json_encode(['status' => 'error', 'message' => 'この備品は現在貸出中のため、削除できません。']), 409);
+            }
+            
+            // Model_Box を使って備品を削除
+            $deleted = Model_Box::delete_box($id);
+
+            if ($deleted)
+            {
+                // 成功時には、新しいCSRFトークンを含めて返す
+                return \Response::forge(json_encode([
+                    'status' => 'success',
+                    'message' => '備品 (ID: '.$id.') を削除しました。',
+                    'new_csrf_token' => \Security::fetch_token() // 新しいトークンを追加
+                ]), 200);
+            }
+            else
+            {
+                return \Response::forge(json_encode(['status' => 'error', 'message' => '備品の削除に失敗しました。']), 500);
+            }
+        } catch (\Database_Exception $e) {
+            \Log::error('Database Exception in API delete for box ID ' . $id . ': ' . $e->getMessage());
+            return \Response::forge(json_encode(['status' => 'error', 'message' => 'データベースエラーが発生しました。']), 500);
+        } catch (\Exception $e) {
+            \Log::error('General Exception in API delete for box ID ' . $id . ': ' . $e->getMessage());
+            return \Response::forge(json_encode(['status' => 'error', 'message' => '予期せぬエラーが発生しました。']), 500);
+        }
+    }
+
+    /**
+     * 既存の備品を編集するアクション (GET: フォーム表示, POST: フォーム処理)
+     * URL: /box/edit/{box_id}
+     * @param int $id 編集するボックスのID
+     */
+    public function action_edit($id = null)
+    {
+        if ($id === null)
+        {
+            return $this->action_404();
+        }
+
+        // 既存の備品情報を取得
+        $box = Model_Box::get_box($id);
+        if (!$box)
+        {
+            \Session::set_flash('error', '指定された備品が見つかりませんでした。');
+            return \Response::redirect('box/manage');
+        }
+
+        // POSTリクエストの場合、備品更新処理を実行
         if (\Input::method() == 'POST')
         {
             // CSRFトークンの検証
             if ( ! \Security::check_token())
             {
                 \Session::set_flash('error', '不正なリクエストです。ページを再読み込みしてください。');
-                return \Response::redirect('box/create');
+                return \Response::redirect('box/edit/'.$id);
             }
 
-            $label = \Input::post('label');
+            $new_label = \Input::post('label');
 
             // 入力値のバリデーション
-            if (empty($label))
+            if (empty($new_label))
             {
                 \Session::set_flash('error', '備品ラベルを入力してください。');
-                return \Response::redirect('box/create');
+                return \Response::redirect('box/edit/'.$id);
             }
 
             try {
-                // Model_Box を使って新しい備品を作成
-                $new_box_id = Model_Box::create_box($label);
+                // Model_Box を使って備品を更新
+                $updated = Model_Box::update_box($id, $new_label);
 
-                if ($new_box_id)
+                if ($updated)
                 {
-                    \Session::set_flash('success', '新しい備品 「'.htmlspecialchars($label).'」 を追加しました。 (ID: '.$new_box_id.')');
+                    \Session::set_flash('success', '備品 「'.htmlspecialchars($box['label']).'」 を 「'.htmlspecialchars($new_label).'」 に更新しました。');
                     return \Response::redirect('box/manage'); // 管理ページへリダイレクト
                 }
                 else
                 {
-                    \Session::set_flash('error', '備品の追加に失敗しました。');
+                    \Session::set_flash('error', '備品の更新に失敗しました。変更がなかったか、エラーが発生しました。');
                 }
             } catch (\Database_Exception $e) {
                 \Session::set_flash('error', 'データベースエラーが発生しました: ' . $e->getMessage());
-                \Log::error('Database Exception when creating box: ' . $e->getMessage());
+                \Log::error('Database Exception when updating box (ID: '.$id.'): ' . $e->getMessage());
             } catch (\Exception $e) {
                 \Session::set_flash('error', '予期せぬエラーが発生しました: ' . $e->getMessage());
-                \Log::error('General Exception when creating box: ' . $e->getMessage());
+                \Log::error('General Exception when updating box (ID: '.$id.'): ' . $e->getMessage());
             }
-            return \Response::redirect('box/create'); // エラー時はフォームに戻る
+            return \Response::redirect('box/edit/'.$id); // エラー時はフォームに戻る
         }
 
+        // GETリクエストの場合、備品編集フォームを表示
         $data = array(
-            'title' => '備品の追加',
-            'flash_message_error' => \Session::get_flash('error'), // エラーメッセージを表示
-            'csrf_token' => \Security::fetch_token(), // CSRFトークンをビューに渡す
+            'title' => '備品の編集',
+            'item_id' => $box['box_id'],
+            'item_label' => $box['label'], // 既存のラベルをフォームに表示するため
+            'flash_message_error' => \Session::get_flash('error'),
+            'csrf_token' => \Security::fetch_token(),
             'global_data'           => array(),
         );
 
         ob_start();
         extract($data);
-        include APPPATH.'views/box/create.php'; // 新しいビューファイルをインクルード
+        include APPPATH.'views/box/edit.php';
         $output = ob_get_clean();
         
         return \Response::forge($output);
     }
 
-     /**
+    /**
      * 備品を削除するアクション (POST)
      * URL: /box/delete/{box_id}
      * @param int $id 削除するボックスのID
      */
     public function action_delete($id = null)
     {
-      if ($id === null)
+        if ($id === null)
         {
             \Session::set_flash('error', '削除する備品のIDが指定されていません。');
             \Response::redirect('box/manage');
@@ -385,7 +530,9 @@ class Controller_Box extends Controller
             }
 
             try {
-                $box_exists_before_delete = (Model_Box::get_box($id) !== null);
+                // 削除前に備品情報を取得する必要がある場合（例: ログに残すため）
+                // ただし、表示に失敗する可能性のある 'label' へのアクセスは避ける
+                // $box_exists_before_delete = (Model_Box::get_box($id) !== null); // この変数は使われていないので削除しても良い
 
                 // 備品が貸出中であるかチェック
                 $loan_status = Model_Loan::get_box_loan_status($id);
@@ -395,13 +542,14 @@ class Controller_Box extends Controller
                     exit;
                 }
                 
+                // Model_Box を使って備品を削除
                 $deleted = Model_Box::delete_box($id);
 
                 if ($deleted)
                 {
                     // 備品IDのみで成功メッセージを表示
                     \Session::set_flash('success', '備品 (ID: '.$id.') を削除しました。');
-                    \Log::info('Box ID: ' . $id . ' deleted successfully.');
+                    \Log::info('Box ID: ' . $id . ' deleted successfully.'); // ログにはIDと元のラベルも残せる
                 }
                 else
                 {
@@ -427,6 +575,10 @@ class Controller_Box extends Controller
         exit;
     }
 
+    /**
+     * 404 Not Found のアクション
+     * ... (変更なし) ...
+     */
     public function action_404()
     {
         return \Response::forge(\View::forge('404'), 404);
