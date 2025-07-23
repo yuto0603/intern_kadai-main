@@ -4,16 +4,18 @@
     <title>備品管理 (Equipment Management)</title>
     <link rel="stylesheet" href="/assets/css/manage.css">
     <link rel="stylesheet" href="/assets/css/style.css">
-
+    <link rel="stylesheet" href="/assets/css/manage_message.css">
 </head>
 <body>
+    <div class="dynamic-message" data-bind="css: dynamicMessageClass, text: dynamicMessageText, visible: showDynamicMessage">
+    </div>
+
     <h1 class="header-title">備品貸出管理 (Equipment Loan Management)</h1>
 
      <div class="tab-nav">
         <a href="<?php echo Uri::base(); ?>box" class="tab-nav-item">備品一覧 (Equipment List)</a>
         <a href="<?php echo Uri::base(); ?>box/manage" class="tab-nav-item active">備品管理 (Equipment Management)</a>
     </div>
-
 
     <?php if (isset($flash_message_success)): ?>
         <div class="alert alert-success">
@@ -57,19 +59,21 @@
         <p>現在、登録されている備品はありません。(No items are currently registered.)</p>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-latest.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-latest.js"></script>
     <script src="/assets/js/box_manage_viewmodel.js"></script>
-    
+
     <script>
         // コントローラーから渡された初期データをJavaScriptオブジェクトに変換
         var initialBoxesData = <?php echo $initial_boxes_json; ?>;
         var csrfToken = '<?php echo \Security::fetch_token(); ?>'; // CSRFトークンをJavaScriptで利用可能にする
 
-        // ViewModel をインスタンス化し、HTMLに適用
+       // DOMが完全に読み込まれてからKnockout.jsのバインディングを適用する
+        $(document).ready(function() {
         var viewModel = new BoxManageViewModel(initialBoxesData);
         viewModel.csrf_token(csrfToken); // CSRFトークンをViewModelに設定
         ko.applyBindings(viewModel);
+    });
     </script>
 </body>
 </html>

@@ -23,6 +23,31 @@ function BoxManageViewModel(initialBoxes) {
         return self.newBoxLabel().trim() !== '';
     });
 
+    // --- 動的メッセージ表示用のプロパティ ---
+    self.showDynamicMessage = ko.observable(false); // メッセージの表示/非表示
+    self.dynamicMessageText = ko.observable('');    // 表示するメッセージのテキスト
+    self.dynamicMessageClass = ko.observable('');   // メッセージの色を制御するCSSクラス (success/error)
+
+    // メッセージを表示するヘルパー関数
+    self.displayMessage = function(message, type) {
+        self.dynamicMessageText(message);
+        self.dynamicMessageClass(type); // 'success' or 'error'
+        self.showDynamicMessage(true); // メッセージを表示する
+
+        // jQueryを使ってフェードインアニメーション
+        $('.dynamic-message').fadeIn(300); // 300msでフェードイン
+
+        // 3秒後にメッセージを自動で非表示にする
+        setTimeout(function() {
+            $('.dynamic-message').fadeOut(500, function() { // 500msでフェードアウト
+                self.showDynamicMessage(false); // アニメーション終了後に完全に非表示にする
+                self.dynamicMessageText('');
+                self.dynamicMessageClass('');
+            });
+        }, 3000); // 3000ms = 3秒後に実行
+    };
+    // --- 動的メッセージ表示用のプロパティここまで ---
+
     // 備品追加処理 (Ajax連携)
     self.addBox = function() {
         if (self.canAddBox()) {

@@ -1,0 +1,20 @@
+/* 新しいメッセージ表示エリアのスタイル */
+/*view/box/management.php のフラッシュメッセージCSS*/
+        .dynamic-message {
+            position: fixed; /* 画面に固定 */
+            top: 20px;       /* 画面上部から20px */
+            left: 50%;       /* 中央寄せの基準 */
+            transform: translateX(-50%); /* 中央寄せ */
+            z-index: 1000;   /* 他の要素より手前に表示 */
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: none; /* 初期状態は非表示 */
+            color: #fff;
+        }
+        .dynamic-message.success {
+            background-color: #5cb85c; /* success色 */
+        }
+        .dynamic-message.error {
+            background-color: #d9534f; /* danger色 */
+        }
