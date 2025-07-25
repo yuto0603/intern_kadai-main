@@ -32,20 +32,11 @@ class Controller_Box extends Controller
             'global_data'           => array(),
         );
 
-        // 出力をバッファリングする
-        ob_start();
-        
-        // 変数を現在のスコープにインポート
-        extract($data);
-        
-        // ビューファイルを直接インクルード
+        ob_start();// 出力をバッファリング
+        extract($data);// 変数を現在のスコープにインポート
         include APPPATH.'views/box/index.php';
-        
-        // バッファの内容を取得
-        $output = ob_get_clean();
-
-        // レスポンスとして返す
-        return \Response::forge($output);
+        $output = ob_get_clean();// バッファの内容を取得
+        return \Response::forge($output);  // レスポンスとして返す
     }
 
     /**
@@ -59,10 +50,8 @@ class Controller_Box extends Controller
             return $this->action_404();
         }
 
-        // POSTリクエストの場合、貸出処理を実行
-        if (\Input::method() == 'POST')
+        if (\Input::method() == 'POST') // POSTリクエスト→貸出処理を実行
         {
-            // CSRFトークンの検証 
             if ( ! \Security::check_token())
             {
                 \Session::set_flash('error', '不正なリクエストです。ページを再読み込みしてください。');
@@ -85,7 +74,7 @@ class Controller_Box extends Controller
                 if ($loaned)
                 {
                     \Session::set_flash('success', $user_name.'さんがB-'.$id.'モニターを借りました。');
-                    return \Response::redirect('box'); // メインページへリダイレクト
+                    return \Response::redirect('box'); 
                 }
                 else
                 {
@@ -101,8 +90,7 @@ class Controller_Box extends Controller
             return \Response::redirect('box/loan/'.$id);
         }
 
-        // GETリクエストの場合、貸出ページを表示
-        $box_data = Model_Box::get_all_boxes(); 
+        $box_data = Model_Box::get_all_boxes();  // GETリクエスト→貸出ページへ
         $target_box = null;
         foreach ($box_data as $box) {
             if ($box['box_id'] == $id) {
@@ -132,20 +120,12 @@ class Controller_Box extends Controller
             'global_data'           => array(),
         );
 
-        // 出力をバッファリングする
+        
         ob_start();
-        
-        // 変数を現在のスコープにインポート
-        extract($data);
-        
-        // ビューファイルを直接インクルード
+        extract($data);// 変数を現在のスコープにインポート
         include APPPATH.'views/box/loan.php';
-        
-        // バッファの内容を取得
-        $output = ob_get_clean();
-
-        // レスポンスとして返す
-        return \Response::forge($output);
+        $output = ob_get_clean();// バッファの内容を取得
+        return \Response::forge($output); // レスポンスとして返す
     }
 
     /**
@@ -158,11 +138,9 @@ class Controller_Box extends Controller
         {
             return $this->action_404();
         }
-
-        // POSTリクエストの場合、返却処理を実行
-        if (\Input::method() == 'POST')
+        
+        if (\Input::method() == 'POST')  // POSTリクエストの場合、返却処理を実行
         {
-            // CSRFトークンの検証
             if ( ! \Security::check_token())
             {
                 \Session::set_flash('error', '不正なリクエストです。ページを再読み込みしてください。');
@@ -237,20 +215,12 @@ class Controller_Box extends Controller
             'global_data'           => array(),
         );
 
-        // 出力をバッファリングする
         ob_start();
-        
-        // 変数を現在のスコープにインポート
-        extract($data);
-        
-        // ビューファイルを直接インクルード
+        extract($data);// 変数を現在のスコープにインポート
         include APPPATH.'views/box/return.php';
-        
-        // バッファの内容を取得
-        $output = ob_get_clean();
+        $output = ob_get_clean();// バッファの内容を取得
+        return \Response::forge($output);        // レスポンスとして返す
 
-        // レスポンスとして返す
-        return \Response::forge($output);
     }
 
     /**
@@ -259,10 +229,9 @@ class Controller_Box extends Controller
      */
     public function action_manage()
     {
-        // 備品データを取得 (Model_Box::get_all_boxes() は以前修正済み)
-        $boxes = Model_Box::get_all_boxes();
+        $boxes = Model_Box::get_all_boxes();// 備品データを取得
 
-        // 各備品の貸出状況と借りているユーザー名を取得して追加 (Knockout.js ViewModelに直接渡せるように)
+        // 各備品の貸出状況と借りているユーザー名を取得して追加
         $detailed_boxes = [];
         // $boxes が配列でない場合や空の場合に備える
         if (is_array($boxes) && !empty($boxes)) {
@@ -283,7 +252,6 @@ class Controller_Box extends Controller
             }
         }
 
-        // View::forge の代わりに include 方式を使用
         $data = array(
             'title'         => '備品管理',
             // Knockout.js の初期データとして JSON 形式でビューに渡す
@@ -336,8 +304,6 @@ class Controller_Box extends Controller
             if ($new_box_id)
             {
                 // 成功時は新しい備品のIDとラベル、初期ステータスを返す
-                // Model_Loan::get_box_loan_status() は Ajax で呼び出すのではなく、
-                // 初期値として「貸出可能」を設定します。
                 return \Response::forge(json_encode([
                     'status' => 'success',
                     'message' => '新しい備品 「'.htmlspecialchars($label).'」 を追加しました。',
@@ -530,10 +496,6 @@ class Controller_Box extends Controller
             }
 
             try {
-                // 削除前に備品情報を取得する必要がある場合（例: ログに残すため）
-                // ただし、表示に失敗する可能性のある 'label' へのアクセスは避ける
-                // $box_exists_before_delete = (Model_Box::get_box($id) !== null); // この変数は使われていないので削除しても良い
-
                 // 備品が貸出中であるかチェック
                 $loan_status = Model_Loan::get_box_loan_status($id);
                 if ($loan_status && $loan_status['status'] === '貸出中') {

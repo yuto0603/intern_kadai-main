@@ -21,24 +21,24 @@ class Model_Box
      */
     public static function create_box($label)
     {
-        // トランザクションを開始
         \DB::start_transaction();
 
         try {
             // 1. boxes テーブルに新しい備品を挿入
-            list($box_id, $rows_affected_box) = \DB::insert('boxes')
-                                                 ->set(array('label' => $label))
-                                                 ->execute();
+            list($box_id, $rows_affected_box) 
+            = \DB::insert('boxes')
+           ->set(array('label' => $label))
+           ->execute();
 
             if ($rows_affected_box > 0) {
                 // 2. box_status テーブルに初期ステータスを挿入
-                list($status_id, $rows_affected_status) = \DB::insert('box_status')
-                                                            ->set(array(
-                                                                'box_id' => $box_id,
-                                                                'status' => '貸出可能',
-                                                                'current_user_id' => null,
-                                                            ))
-                                                            ->execute();
+                list($status_id, $rows_affected_status) 
+                = \DB::insert('box_status')
+                ->set(array(
+                'box_id' => $box_id,
+                'status' => '貸出可能',
+                'current_user_id' => null,))
+                ->execute();
                 if ($rows_affected_status > 0) {
                     \DB::commit_transaction(); // 両方の挿入が成功した場合、コミット
                     return $box_id; // 新しい備品のIDを返す
@@ -61,48 +61,36 @@ class Model_Box
      */
     public static function get_box($box_id)
     {
-        $result = \DB::select('box_id', 'label')
-                      ->from('boxes')
-                      ->where('box_id', $box_id)
-                      ->limit(1)
-                      ->execute();
+        $result 
+        = \DB::select('box_id', 'label')
+        ->from('boxes')
+        ->where('box_id', $box_id)
+        ->limit(1)
+        ->execute();
                       
         return $result->as_array();
     }
 
-    /**
-     * Updates an existing box's label.
-     *
-     * @param int $box_id The ID of the box to update.
-     * @param string $new_label The new label for the box.
-     * @return bool True on success, false on failure.
-     * @throws \Database_Exception
-     */
+    
     public static function update_box($box_id, $new_label)
     {
         try {
-            $rows_affected = \DB::update('boxes')
-                               ->set(array('label' => $new_label))
-                               ->where('box_id', $box_id)
-                               ->execute();
+            $rows_affected 
+            = \DB::update('boxes')
+            ->set(array('label' => $new_label))
+            ->where('box_id', $box_id)
+            ->execute();
 
             return $rows_affected > 0;
-        } catch (\Exception $e) {
+        } 
+        catch (\Exception $e) {
             \Log::error('Failed to update box (ID: '.$box_id.'): ' . $e->getMessage());
             throw new \Database_Exception('Failed to update box: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Deletes a box and its related data from the database.
-     *
-     * @param int $box_id The ID of the box to delete.
-     * @return bool True on success, false on failure.
-     * @throws \Database_Exception
-     */
     public static function delete_box($box_id)
     {
-        // トランザクションを開始
         \DB::start_transaction();
 
         try {
